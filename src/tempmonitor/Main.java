@@ -16,6 +16,7 @@ import org.jivesoftware.smack.XMPPException;
 
 /**
  * @author hansolo
+ * @author keilw
  */
 public class Main {
     private String      senderName;
