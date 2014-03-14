@@ -1,5 +1,10 @@
 package tempmonitor;
 
+import static org.unitsofmeasurement.impl.util.US.FAHRENHEIT;
+
+import javax.measure.Measurement;
+import javax.measure.Quantity;
+import javax.measure.quantity.Temperature;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
 import org.jivesoftware.smack.ConnectionConfiguration;
@@ -93,13 +98,14 @@ public class XmppManager {
         }
     }
 
-    public void sendData(double celsius, double fahrenheit, String receiverJID) throws XMPPException {
+    public void sendData(Quantity<Temperature> temperature, String receiverJID) throws XMPPException {
         Message message = new Message();
-        message.setProperty("celsius", celsius);
+        message.setProperty("celsius", temperature);
+        final Measurement<Temperature, Number> fahrenheit = temperature.to(FAHRENHEIT);
         message.setProperty("fahrenheit", fahrenheit);
         message.setBody("Current temperature: \n" +
-                         celsius + " °C\n" +
-                         fahrenheit + " °F");
+                         temperature + "\n" +
+                         fahrenheit);
         sendMessage(message, receiverJID);
     }
 

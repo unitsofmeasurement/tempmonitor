@@ -1,5 +1,7 @@
 package tempmonitor;
 
+import static org.unitsofmeasurement.impl.util.SI.CELSIUS;
+
 import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
 import gnu.io.SerialPort;
@@ -9,8 +11,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-
+import javax.measure.Quantity;
+import javax.measure.quantity.Temperature;
+import org.unitsofmeasurement.impl.model.QuantityFactory;
 
 public class SerialComm {
     public static final String    PI_PORT       = "/dev/ttyUSB0";
@@ -20,17 +23,16 @@ public class SerialComm {
     private PropertyChangeSupport propertyChangeSupport;
     private CommPort              commPort;
     private InputStream           inputStream;
-    private double                celsius;
-    private double                fahrenheit;
+    private Quantity<Temperature> temperature;
     private boolean               running;
-
+    private final QuantityFactory<Temperature> tempFactory = 
+                                 QuantityFactory.getInstance(Temperature.class);
 
     // ******************** Constructor ***************************************
     public SerialComm() {
         super();
         propertyChangeSupport = new PropertyChangeSupport(this);
-        celsius               = 0;
-        fahrenheit            = 0;
+        temperature           = null;
         running               = true;
     }
 
@@ -77,18 +79,14 @@ public class SerialComm {
         }
     }
 
-    public double getCelsius() {
-        return celsius;
+    public Quantity<Temperature> getTemperature() {
+        return temperature;
     }
-
-    private void setCelsius(final double CELSIUS) {
-        celsius    = CELSIUS;
-        fahrenheit = ((celsius * 9) / 5) + 32;
-        propertyChangeSupport.firePropertyChange(TEMP_PROPERTY, (Number) fahrenheit, (Number) celsius);
-    }
-
-    public double getFahrenheit() {
-        return fahrenheit;
+    
+    private void setTemperature(final Quantity<Temperature> temp) {
+        final Quantity<Temperature> oldTemp = temperature;
+        temperature    = temp;
+        propertyChangeSupport.firePropertyChange(TEMP_PROPERTY, oldTemp, temp);
     }
 
     private Thread createSerialReaderThread() {
@@ -102,8 +100,10 @@ public class SerialComm {
                             if (line.length() > 6 && line.endsWith("C")) {
                                 try {
                                     double value = Double.parseDouble(line.substring(1, 6));
-                                    setCelsius(value);
-                                } catch (NumberFormatException exception) {}
+                                    setTemperature(tempFactory.create(value, CELSIUS));
+                                } catch (NumberFormatException exception) {
+                                    // TODO react here
+                                }
                             }
                         }
                     } catch (IOException exception) {

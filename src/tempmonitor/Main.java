@@ -9,9 +9,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import javax.measure.Quantity;
+import javax.measure.quantity.Temperature;
 import org.jivesoftware.smack.XMPPException;
 
 
@@ -54,7 +53,7 @@ public class Main {
             serialComm.connect(SerialComm.PI_PORT);
             serialComm.addPropertyChangeListener(new PropertyChangeListener() {
             @Override public void propertyChange(final PropertyChangeEvent EVENT) {
-                sendMessage((Double) EVENT.getNewValue(), (Double) EVENT.getOldValue(), receiverJid);
+                sendMessage((Quantity<Temperature>) EVENT.getNewValue(), receiverJid);
             }
         });
         } catch (NoSuchPortException | PortInUseException | UnsupportedCommOperationException | IOException exception) {
@@ -62,12 +61,12 @@ public class Main {
         }
     }
 
-    private void sendMessage(final double CELSIUS, final double FAHRENHEIT, final String JID) {
+    private void sendMessage(final Quantity<Temperature> temperature, final String JID) {
         if (xmppManager == null) return;
         new Thread(new Runnable() {
             @Override public void run() {
                 try {
-                    xmppManager.sendData(CELSIUS, FAHRENHEIT, JID);
+                    xmppManager.sendData(temperature, JID);
                 } catch (XMPPException exception) {
                     System.out.println("Error sending data via xmpp: " + exception);
                 }
@@ -76,7 +75,7 @@ public class Main {
     }
 
     public void answerTempRequest(final String JID) {
-        sendMessage(serialComm.getCelsius(), serialComm.getFahrenheit(), JID);
+        sendMessage(serialComm.getTemperature(), JID);
     }
 
     private Properties readProperties() {
