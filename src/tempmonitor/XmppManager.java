@@ -1,10 +1,13 @@
 package tempmonitor;
 
+import static org.unitsofmeasurement.impl.util.SI.SECOND;
+import static org.unitsofmeasurement.impl.util.SIPrefix.MILLI;
 import static org.unitsofmeasurement.impl.util.US.FAHRENHEIT;
 
 import javax.measure.Measurement;
 import javax.measure.Quantity;
 import javax.measure.quantity.Temperature;
+import javax.measure.quantity.Time;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
 import org.jivesoftware.smack.ConnectionConfiguration;
@@ -19,10 +22,16 @@ import org.jivesoftware.smack.filter.PacketFilter;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Presence;
+import org.unitsofmeasurement.impl.model.QuantityFactory;
 
 
 public class XmppManager {
-    private static final int        PACKET_REPLY_TIMEOUT = 3000; // millis
+    private static final QuantityFactory<Time>  TIME_FACTORY = 
+            QuantityFactory.getInstance(Time.class);
+    private static final Quantity<Time> PACKET_REPLY_TIMEOUT = 
+            TIME_FACTORY.create(3000, MILLI(SECOND)); 
+            // a bit of an overkill but a typesafe representation of 3s;-)
+    
     private Main                    main;
     private String                  server;
     private String                  resource;
@@ -46,7 +55,8 @@ public class XmppManager {
 
     // ******************* Initialization *************************************
     public void init() throws XMPPException {
-        SmackConfiguration.setPacketReplyTimeout(PACKET_REPLY_TIMEOUT);
+        SmackConfiguration.setPacketReplyTimeout(
+                PACKET_REPLY_TIMEOUT.getValue().intValue());
 
         config = new ConnectionConfiguration(server, port);
         SASLAuthentication.supportSASLMechanism("PLAIN");
@@ -101,7 +111,8 @@ public class XmppManager {
     public void sendData(Quantity<Temperature> temperature, String receiverJID) throws XMPPException {
         Message message = new Message();
         message.setProperty("celsius", temperature);
-        final Measurement<Temperature, Number> fahrenheit = temperature.to(FAHRENHEIT);
+        final Measurement<Temperature, Number> fahrenheit = 
+                         temperature.to(FAHRENHEIT);
         message.setProperty("fahrenheit", fahrenheit);
         message.setBody("Current temperature: \n" +
                          temperature + "\n" +
