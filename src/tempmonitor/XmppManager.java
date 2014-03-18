@@ -32,10 +32,10 @@ public class XmppManager {
             TIME_FACTORY.create(3000, MILLI(SECOND)); 
             // a bit of an overkill but a typesafe representation of 3s;-)
     
-    private Main                    main;
-    private String                  server;
-    private String                  resource;
-    private int                     port;
+    private final Main              main;
+    private final String            server;
+    private final String            resource;
+    private final int               port;
     private ConnectionConfiguration config;
     private XMPPConnection          connection;
     private ChatManager             chatManager;
@@ -109,7 +109,7 @@ public class XmppManager {
     }
 
     public void sendData(Quantity<Temperature> temperature, String receiverJID) throws XMPPException {
-        Message message = new Message();
+        final Message message = new Message();
         message.setProperty("celsius", temperature);
         final Measurement<Temperature, Number> fahrenheit = 
                          temperature.to(FAHRENHEIT);
